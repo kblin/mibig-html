@@ -109,7 +109,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
     for annot in annots:
         gene = {
             "locus_tag": annot.id,
-            "protein_id": "None",
+            "protein_id": f"None({annot.id})",
             "gene": annot.name,
             "product": annot.product or ""
         }
@@ -123,8 +123,13 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
             gene["functions"].append(function_text)
             gene["evidences"] = sorted(set(function.evidence))
         genes.append(gene)
-    html.add_detail_section("Genes", render_template("genes.html", genes=genes, record=record_layer),
-                            class_name="mibig-genes")
+    try:
+        html.add_detail_section("Genes", render_template("genes.html", genes=genes, record=record_layer),
+                                class_name="mibig-genes")
+    except (KeyError, ValueError):
+        from pprint import pprint
+        pprint(genes)
+        raise
 
     if data.cluster.polyketide:
         html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.data.cluster.polyketide, record=record_layer),

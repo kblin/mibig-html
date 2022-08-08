@@ -115,7 +115,7 @@ class Record(ASRecord):
             except KeyError as err:
                 raise ValueError(f"unknown CDS/gene name: {name}") from err
         if len(results) > 1:
-            raise ValueError(f"multiple features map to alternative CDS/gene name {name}")
+            raise ValueError(f"multiple features map to alternative CDS/gene name {name} {results}")
         return list(results)[0]
 
     def add_biopython_feature(self, feature: SeqFeature) -> None:
