@@ -41,7 +41,14 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
 
     with open(json_path, "r") as json_file:
         raw = json.load(json_file)
-    data = Everything(raw)
+
+    try:
+        data = Everything(raw)
+    except AssertionError as err:
+        write_log(f"Failed to parse json file {json_path}: {err}", log_file_path)
+        raise
+        return 1
+
     mibig_acc = data.cluster.mibig_accession
     gbk_acc = data.cluster.loci.accession
     gbk_path = os.path.join(gbk_folder, "{}.gbk".format(gbk_acc))
@@ -157,6 +164,8 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             "--html-title", "{}".format(mibig_acc),
             "--cb-known",
             "--cc-mibig",
+            "--clusterhmmer",
+            "--tigrfam",
             "--taxon", taxon,
             "--output-dir", output_path,
         ]
