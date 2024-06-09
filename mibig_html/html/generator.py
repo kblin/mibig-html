@@ -8,7 +8,7 @@ import os
 import re
 from typing import Any, Dict, List, Set, Tuple, Union, cast
 
-from mibig.converters.read.cluster import GeneAnnotation
+from mibig.converters.v3.read.cluster import GeneAnnotation
 
 from antismash.common import html_renderer, path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
@@ -22,12 +22,11 @@ from antismash.config import ConfigType
 from antismash.outputs.html import js
 from antismash.outputs.html.generator import (
     find_plugins_for_cluster,
-    generate_searchgtr_htmls,
     write_regions_js,
     VISUALISERS,
 )
 
-from mibig.converters.read.top import Everything
+from mibig.converters.v3.read.top import Everything
 
 from mibig_html import annotations
 from mibig_html.common.layers import OptionsLayer
@@ -165,7 +164,6 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
     all_modules.pop(all_modules.index(annotations))
     all_modules.insert(0, cast(AntismashModule, annotations))
 
-    generate_searchgtr_htmls([record], options)
     json_records, js_domains, js_results = build_json_data([record], [result], options, all_modules, categories)
     write_regions_js(json_records, options.output_dir, js_domains, js_results)
 

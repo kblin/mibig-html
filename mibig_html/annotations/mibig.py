@@ -16,7 +16,7 @@ from antismash.common.secmet.locations import (
     location_contains_other,
 )
 
-from mibig.converters.read.top import Everything
+from mibig.converters.v3.read.top import Everything
 from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
 from mibig_html.common.secmet import Record

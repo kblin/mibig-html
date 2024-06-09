@@ -11,7 +11,7 @@ import os
 import shutil
 from typing import Dict, List, Optional
 
-import scss
+import sass
 
 from antismash.common import path
 from antismash.common.module_results import ModuleResults
@@ -19,8 +19,9 @@ from antismash.common.secmet import Record
 from antismash.custom_typing import AntismashModule
 from antismash.config import ConfigType
 from antismash.config.args import ModuleArgs
+from antismash.outputs.html import get_arguments as html_get_arguments
 
-from mibig.converters.read.top import Everything
+from mibig.converters.v3.read.top import Everything
 
 from mibig_html.html.generator import generate_webpage, generate_retired_page
 
@@ -31,7 +32,7 @@ SHORT_DESCRIPTION = "HTML output for mibig-mode"
 
 def get_arguments() -> ModuleArgs:
     """ Builds the arguments for the HMTL output module """
-    return ModuleArgs("Output options", "html")
+    return html_get_arguments()
 
 
 def prepare_data(_logging_only: bool = False) -> List[str]:
@@ -42,7 +43,7 @@ def prepare_data(_logging_only: bool = False) -> List[str]:
         if path.is_outdated(built_file, glob.glob("*.scss")):
             logging.info("CSS files out of date, rebuilding")
 
-            result = scss.Compiler(output_style="expanded").compile("mibig.scss")
+            result = sass.compile(filename="mibig.scss", output_style="compact")
             assert result
             with open("mibig.css", "w") as out:
                 out.write(result)

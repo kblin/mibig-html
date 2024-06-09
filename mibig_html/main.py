@@ -41,7 +41,7 @@ from antismash.main import (
     SeqIO,
     svg,
 )
-from mibig.converters.read.top import Everything
+from mibig.converters.v3.read.top import Everything
 
 from mibig_html import annotations, html
 from mibig_html.common.secmet import Record

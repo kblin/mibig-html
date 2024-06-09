@@ -16,7 +16,7 @@ from typing import List
 
 import antismash
 from antismash.common.subprocessing import execute
-from mibig.converters.read.top import Everything
+from mibig.converters.v3.read.top import Everything
 from mibig_taxa import TaxonCache  # pylint:disable=no-name-in-module
 
 import mibig_html
@@ -155,6 +155,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             "-v",
             "--minlength", "1",
             "--html-title", "{}".format(mibig_acc),
+            "--html-ncbi-context",
             "--cb-known",
             "--cc-mibig",
             "--taxon", taxon,

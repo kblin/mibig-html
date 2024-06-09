@@ -12,7 +12,7 @@ from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.html_renderer import HTMLSections, Markup
 from antismash.common.layers import RegionLayer, RecordLayer
-from mibig.converters.read.cluster import Publication
+from mibig.converters.v3.read.cluster import Publication
 
 from mibig_html.common.html_renderer import FileTemplate
 from mibig_html.common.layers import OptionsLayer

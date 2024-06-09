@@ -80,7 +80,7 @@ dd {
 }
 
 .as-icon-active {
-    box-shadow: 0 3px 6px rgba(white, 40%), inset 0 -3px 3px rgba(white, 60%);
+    box-shadow: 0 3px 6px rgba(white, 0.4), inset 0 -3px 3px rgba(white, 0.6);
 }
 
 @mixin left-padding($width: 0.5em){
@@ -1051,7 +1051,7 @@ ul.dropdown-options {
     & .body-details-header,
     & .sidepanel-details-header {
         font-size: 90%;
-        background-color: rgba($antismash-main, 60%);
+        background-color: rgba($antismash-main, 0.6);
         color: white;
         margin-right: 0.1em;
         padding-left: 0.5em;
@@ -1067,7 +1067,7 @@ ul.dropdown-options {
         @include unselectable();
 
         &:hover {
-            background-color: rgba($antismash-main, 80%);
+            background-color: rgba($antismash-main, 0.8);
         }
     }
 
