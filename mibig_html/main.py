@@ -47,7 +47,7 @@ from mibig_html import annotations, html
 from mibig_html.common.secmet import Record
 
 
-__version__ = "3.0alpha"
+__version__ = "4.0alpha"
 
 
 def get_all_modules() -> List[AntismashModule]:
