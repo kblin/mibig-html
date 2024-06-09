@@ -24,6 +24,15 @@
         window.scrollTo(0, 0);
         viewer["start"](all_regions, details_data, resultsData, recordData);
         document.removeEventListener("keyup", null);
+        const compound_links = document.getElementsByClassName("compound-link");
+        for(let i=0; i < compound_links.length; i++) {
+            const link = compound_links[i];
+            link.addEventListener("click", function() {
+                const compound_id = link.getAttribute("data-name");
+                document.querySelectorAll("[data-name='r1c1-mibig-compounds']")[0].click();
+                document.getElementById(compound_id).scrollIntoView({behavior: "smooth"});
+            });
+        };
     })
   </script>
 
