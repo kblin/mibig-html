@@ -41,7 +41,8 @@ from antismash.main import (
     SeqIO,
     svg,
 )
-from mibig.converters.v3.read.top import Everything
+from mibig.converters.shared.mibig.common import StatusLevel
+from mibig.converters.shared.mibig import MibigEntry
 
 from mibig_html import annotations, html
 from mibig_html.common.secmet import Record
@@ -310,14 +311,14 @@ def _run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
     start_time = datetime.now()
 
     with open(options.mibig_json) as handle:
-        data = Everything(json.load(handle))
-    loci = data.cluster.loci
-    start = loci.start - 1 if loci.start else 0
-    end = loci.end or 0
+        entry = MibigEntry.from_json(json.load(handle))
+    locus = entry.loci[0]
+    start = locus.location.begin - 1 if locus.location.begin else 0
+    end = locus.location.end or 0
 
-    if data.cluster.status == "retired":
+    if entry.status == StatusLevel.RETIRED:
 
-        html.write_retired(data, options)
+        html.write_retired(entry, options)
 
         running_time = datetime.now() - start_time
         logging.debug("MIBiG HTML generation finished at %s; runtime: %s",

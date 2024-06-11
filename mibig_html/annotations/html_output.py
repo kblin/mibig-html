@@ -12,7 +12,7 @@ from antismash.common import path
 from antismash.common.module_results import ModuleResults
 from antismash.common.html_renderer import HTMLSections, Markup
 from antismash.common.layers import RegionLayer, RecordLayer
-from mibig.converters.v3.read.cluster import Publication
+from mibig.converters.shared.common import Citation
 
 from mibig_html.common.html_renderer import FileTemplate
 from mibig_html.common.layers import OptionsLayer
@@ -42,24 +42,24 @@ def render_template(template_name: str, **kwargs: Any) -> Markup:
 def generate_html(region_layer: RegionLayer, results: ModuleResults,
                   record_layer: RecordLayer, _options_layer: OptionsLayer) -> HTMLSections:
     assert isinstance(results, MibigAnnotations)
-    data = results.data
+    entry = results.entry
     tax = results.taxonomy
     # "class" is a reserved keyword in python, can't use it directly
     tax_class = getattr(tax, "class")
 
     html = HTMLSections("mibig-general")
     taxonomy_text = f"{tax.superkingdom} > {tax.kingdom} > {tax.phylum} > {tax_class} > {tax.order} > {tax.family} > {tax.name}"
-    publications_links = ReferenceCollection(data.cluster.publications, results.pubmed_cache, results.doi_cache)
+    publications_links = ReferenceCollection(entry.references, results.pubmed_cache, results.doi_cache)
 
-    general = render_template("general.html", data=results.data, taxonomy_text=taxonomy_text,
+    general = render_template("general.html", entry=results.entry, taxonomy_text=taxonomy_text,
                               publications_links=publications_links.get_links())
     html.add_detail_section("General", general)
 
-    compounds = render_template("compounds.html", compounds=results.data.cluster.compounds)
+    compounds = render_template("compounds.html", compounds=results.entry.compounds)
     html.add_detail_section("Compounds", compounds, class_name="mibig-compounds")
 
     genes = []
-    annots = data.cluster.genes.annotations if data.cluster.genes else []
+    annots = entry.genes.annotations if entry.genes and entry.genes.annotations else []
     genes_have_comments = False
     for cds_feature in region_layer.cds_children:
         gene = {
@@ -86,59 +86,59 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
             gene["functions"].append(function_text)
         annot_idx = -1
         for i, annot in enumerate(annots):
-            annot_names = {annot.name, annot.id}
-            annot_names.discard(None)
+            annot_names = {str(annot.id)}
+            if annot.name:
+                annot_names.add(str(annot.name))
             feature_names = {cds_feature.locus_tag, cds_feature.protein_id, cds_feature.gene}
             if feature_names.intersection(annot_names):
                 annot_idx = i
                 break
         if annot_idx >= 0:
             annot = annots.pop(annot_idx)
-            for function in annot.functions:
-                function_text = function.category
-                if annot.tailoring:
-                    function_text += " ({}) ".format(", ".join(annot.tailoring))
+            for function in annot.functions if annot.functions else []:
+                function_text = function.function
+                if annot.tailoring_functions:
+                    function_text += " ({}) ".format(", ".join([f.function for f in annot.tailoring_functions]))
                 else:
                     function_text += " "
                 gene["functions"].append(function_text)
-                gene["evidences"] = sorted(set(function.evidence))
+                gene["evidences"] = sorted(set([e.method for e in function.evidence]))
             if annot.mutation_phenotype:
                 function_text = "Mutation phenotype: {}".format(annot.mutation_phenotype)
                 gene["functions"].append(function_text)
             if annot.product:
                 gene["product"] = annot.product
-            if annot.comments:
-                gene["comment"] = annot.comments
+            if annot.comment:
+                gene["comment"] = annot.comment
                 genes_have_comments = True
         genes.append(gene)
     # everything should've been popped
-    assert not annots
+    assert not annots, [str(a) for a in annots]
 
     html.add_detail_section("Genes", render_template("genes.html", genes=genes, genes_have_comments=genes_have_comments, record=record_layer),
                             class_name="mibig-genes")
 
-    if data.cluster.polyketide:
-        html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.data.cluster.polyketide, record=record_layer),
-                                class_name="mibig-polyketide")
+    #if entry.cluster.polyketide:
+    #    html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.entry.cluster.polyketide, record=record_layer),
+    #                            class_name="mibig-polyketide")
 
-    if data.cluster.nrp:
-        html.add_detail_section("NRP", render_template("nrp.html", nrp=results.data.cluster.nrp, record=record_layer),
-                                class_name="mibig-nrp")
+    #if entry.cluster.nrp:
+    #    html.add_detail_section("NRP", render_template("nrp.html", nrp=results.entry.cluster.nrp, record=record_layer),
+    #                            class_name="mibig-nrp")
 
-    if data.cluster.ripp:
-        html.add_detail_section("RiPP", render_template("ripp.html", ripp=results.data.cluster.ripp, record=record_layer),
-                                class_name="mibig-ripp")
+    #if entry.cluster.ripp:
+    #    html.add_detail_section("RiPP", render_template("ripp.html", ripp=results.entry.cluster.ripp, record=record_layer),
+    #                            class_name="mibig-ripp")
 
-    if data.cluster.saccharide:
-        html.add_detail_section("Saccharide", render_template("saccharide.html", sac=results.data.cluster.saccharide, record=record_layer),
-                                class_name="mibig-saccharide")
+    #if entry.cluster.saccharide:
+    #    html.add_detail_section("Saccharide", render_template("saccharide.html", sac=results.entry.cluster.saccharide, record=record_layer),
+    #                            class_name="mibig-saccharide")
 
-    if data.cluster.terpene:
-        html.add_detail_section("Terpene", render_template("terpene.html", trp=results.data.cluster.terpene, record=record_layer),
-                                class_name="mibig-terpene")
+    #if entry.cluster.terpene:
+    #    html.add_detail_section("Terpene", render_template("terpene.html", trp=results.entry.cluster.terpene, record=record_layer),
+    #                            class_name="mibig-terpene")
 
-    logs = sorted(results.data.changelog, key=lambda log: log.mibig_version)
-    html.add_detail_section("History", render_template("logs.html", logs=logs),
+    html.add_detail_section("History", render_template("logs.html", releases=entry.changelog.releases),
                             class_name="mibig-logs")
 
     return html
@@ -171,7 +171,7 @@ class ReferenceCollection:
         'references',
     )
 
-    def __init__(self, publications: List[Publication], pubmed_cache: PubmedCache,
+    def __init__(self, publications: list[Citation], pubmed_cache: PubmedCache,
                  doi_cache: DoiCache) -> None:
         self.client: Client = None
         self.references = {}
@@ -181,21 +181,23 @@ class ReferenceCollection:
         dois = []
 
         for publication in publications:
-            if publication.category == "pubmed":
-                if publication.content == "0":
+            if publication.database == "pubmed":
+                if publication.value == "0":
                     continue
-                reference = "https://www.ncbi.nlm.nih.gov/pubmed/{}".format(publication.content)
-                pmids.append(publication.content)
-            elif publication.category == "patent":
-                reference = "https://patents.google.com/patent/{}".format(publication.content)
-            elif publication.category == "doi":
-                dois.append(publication.content)
-                reference = "https://dx.doi.org/{}".format(publication.content)
-            elif publication.category == "url":
-                reference = publication.content
+                reference = "https://www.ncbi.nlm.nih.gov/pubmed/{}".format(publication.value)
+                pmids.append(publication.value)
+            elif publication.database == "patent":
+                reference = "https://patents.google.com/patent/{}".format(publication.value)
+            elif publication.database == "doi":
+                dois.append(publication.value)
+                reference = "https://dx.doi.org/{}".format(publication.value)
+            elif publication.database == "url":
+                reference = publication.value
+            else:
+                raise ValueError("Unknown publication database: {}".format(publication.database))
 
-            self.references[publication.content] = ReferenceLink(
-                publication.category, reference, publication.content)
+            self.references[publication.value] = ReferenceLink(
+                publication.database, reference, publication.value)
 
         self._resolve_pmids(pmids)
         self._resolve_dois(dois)

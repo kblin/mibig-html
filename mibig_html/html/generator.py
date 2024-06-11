@@ -8,7 +8,8 @@ import os
 import re
 from typing import Any, Dict, List, Set, Tuple, Union, cast
 
-from mibig.converters.v3.read.cluster import GeneAnnotation
+from mibig.converters.shared.mibig import MibigEntry
+from mibig.converters.shared.mibig.genes import Annotation
 
 from antismash.common import html_renderer, path
 from antismash.common.html_renderer import FileTemplate, HTMLSections
@@ -26,8 +27,6 @@ from antismash.outputs.html.generator import (
     VISUALISERS,
 )
 
-from mibig.converters.v3.read.top import Everything
-
 from mibig_html import annotations
 from mibig_html.common.layers import OptionsLayer
 
@@ -37,6 +36,7 @@ def convert_categories(categories: List[str]) -> List[str]:
     translations = {
         "NRP": "NRPS",
         "Polyketide": "PKS",
+        "ribosomal": "RiPP",
     }
     known = {category.name for category in hmm_detection.categories.get_rule_categories()}
 
@@ -87,11 +87,9 @@ def build_json_data(records: List[Record], results: List[Dict[str, ModuleResults
 
     for i, record in enumerate(records):
         json_record = js_records[i]
-        # replace antismash cds_detail with mibig's one
-        try:
-            cds_annotations = mibig_results.data.cluster.genes.annotations
-        except AttributeError:
-            cds_annotations = []
+        cds_annotations = []
+        if mibig_results.entry.genes and mibig_results.entry.genes.annotations:
+            cds_annotations = mibig_results.entry.genes.annotations
         update_cds_description(record, json_record, cds_annotations, mibig_results)
 
         json_record['seq_id'] = "".join(char for char in json_record['seq_id'] if char in string.printable)
@@ -158,7 +156,8 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
     """ Generates and writes the HTML itself """
     mibig_results = result[annotations.__name__]
     assert isinstance(mibig_results, annotations.MibigAnnotations)
-    categories = set(convert_categories(mibig_results.data.cluster.biosynthetic_class))
+    class_names = [bc.class_name.value for bc in mibig_results.entry.biosynthesis.classes]
+    categories = set(convert_categories(class_names))
 
     # bring mibig module to the front of the module list
     all_modules.pop(all_modules.index(annotations))
@@ -189,28 +188,28 @@ def generate_webpage(record: Record, result: Dict[str, ModuleResults],
                           regions_written=1, sections={record.id: {1: sections}},
                           config=options, page_title=mibig_id,
                           svg_tooltip=svg_tooltip,
-                          record=record_layer, region=region, cluster=mibig_results.data.cluster,
+                          record=record_layer, region=region, entry=mibig_results.entry,
                           annotation_filename=annotation_filename, mibig_id=mibig_id)
     with open(os.path.join(options.output_dir, 'index.html'), 'w', encoding="utf_8") as result_file:
         result_file.write(aux)
 
 
-def generate_retired_page(data: Everything, options: ConfigType) -> None:
+def generate_retired_page(entry: MibigEntry, options: ConfigType) -> None:
     template = FileTemplate(path.get_full_path(__file__, "templates", "retired.html"))
 
     options_layer = OptionsLayer(options, [])
-    mibig_id = data.cluster.mibig_accession
+    mibig_id = entry.accession
 
     aux = template.render(options=options_layer,
-                          reasons=data.cluster.retirement_reasons, see_also=data.cluster.see_also,
+                          reasons=entry.retirement_reasons, see_also=entry.see_also,
                           page_title=mibig_id, mibig_id=mibig_id)
     with open(os.path.join(options.output_dir, 'index.html'), 'w', encoding="utf_8") as result_file:
         result_file.write(aux)
 
 
-def update_cds_description(record: Record, js_record: Dict[str, Any],
-                           cds_annotations: List[GeneAnnotation], results: annotations.MibigAnnotations) -> None:
-    original_accession = results.data.cluster.loci.accession
+def update_cds_description(record: Record, js_record: dict[str, Any],
+                           cds_annotations: list[Annotation], results: annotations.MibigAnnotations) -> None:
+    original_accession = results.entry.loci[0].accession
 
     id_to_annotations = {}
     for annotation in cds_annotations:

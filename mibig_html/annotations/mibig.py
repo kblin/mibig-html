@@ -16,7 +16,7 @@ from antismash.common.secmet.locations import (
     location_contains_other,
 )
 
-from mibig.converters.v3.read.top import Everything
+from mibig.converters.shared.mibig import MibigEntry
 from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
 from mibig_html.common.secmet import Record
@@ -25,16 +25,16 @@ from .references import DoiCache, PubmedCache
 
 
 class MibigAnnotations(DetectionResults):
-    def __init__(self, record_id: str, area: SubRegion, data: Everything, cache_file: str,
+    def __init__(self, record_id: str, area: SubRegion, entry: MibigEntry, cache_file: str,
                  pubmed_cache_file: str, doi_cache_file: str) -> None:
         super().__init__(record_id)
-        self.data = data  # holds the original annotation json data
+        self.entry = entry  # holds the original annotation json data
         # save calculated loci (relative to record), not annotated ones
         self.record_id = record_id
         self.area = area
 
         cache = TaxonCache(cache_file)
-        self.taxonomy = cache.get(int(data.cluster.ncbi_tax_id))
+        self.taxonomy = cache.get(entry.taxonomy.ncbi_tax_id)
 
         self.pubmed_cache = PubmedCache(pubmed_cache_file)
         self.doi_cache = DoiCache(doi_cache_file)
@@ -44,19 +44,22 @@ class MibigAnnotations(DetectionResults):
 
     def to_json(self) -> Dict[str, Any]:
         # save only information critical for deciding reusability
-        loci = self.data.cluster.loci
+        locus = self.entry.loci[0]
         annotations = []
-        for annot in (self.data.cluster.genes.annotations if self.data.cluster.genes else []):
+        for annot in (self.entry.genes.annotations if self.entry.genes and self.entry.genes.annotations else []):
             annotations.append(annot.to_json())
-        extra_genes = []
-        for extra_gene in (self.data.cluster.genes.extra_genes if self.data.cluster.genes else []):
-            extra_genes.append(extra_gene.to_json())
+        to_add = []
+        for extra_gene in (self.entry.genes.to_add if self.entry.genes and self.entry.genes.to_add else []):
+            to_add.append(extra_gene.to_json())
+        to_delete = []
+        for gene_to_remove in (self.entry.genes.to_delete if self.entry.genes and self.entry.genes.to_delete else []):
+            to_delete.append(gene_to_remove.to_json())
         return {
             "record_id": self.record_id,
-            "genbank_accession": loci.accession,
-            "coords": (loci.start or -1, loci.end or -1),
+            "genbank_accession": locus.accession,
+            "coords": (locus.location.begin or -1, locus.location.end or -1),
             "gene_annotations": annotations,
-            "extra_genes": extra_genes,
+            "extra_genes": to_add,
         }
 
     @staticmethod
@@ -64,38 +67,42 @@ class MibigAnnotations(DetectionResults):
                   cache_file: str, pubmed_cache_file: str, doi_cache_file: str) -> Optional["MibigAnnotations"]:
         with open(annotations_file) as handle:
             raw = json.load(handle)
-            data = Everything(raw)
+            entry = MibigEntry.from_json(raw)
 
         # compare old vs new annotation, decide if we can 'reuse'
         can_reuse = True
-        loci = data.cluster.loci
-        gene_annotations = data.cluster.genes.annotations if data.cluster.genes else []
-        extra_genes = data.cluster.genes.extra_genes if data.cluster.genes else []
-        if loci.accession != prev["genbank_accession"]:
+        locus = entry.loci[0]
+        gene_annotations = entry.genes.annotations if entry.genes and entry.genes.annotations else []
+        to_add = entry.genes.to_add if entry.genes and entry.genes.to_add else []
+        to_delete = entry.genes.to_delete if entry.genes and entry.genes.to_delete else []
+        if locus.accession != prev["genbank_accession"]:
             logging.debug("Previous result's genbank_accession is not the same as the new one")
             can_reuse = False
         elif record.id != prev["record_id"]:
             logging.debug("Previous result's record_id is not the same as the new one")
             can_reuse = False
-        elif (loci.start or -1) != prev["coords"][0] or (loci.end or -1) != prev["coords"][1]:
+        elif (locus.location.begin or -1) != prev["coords"][0] or (locus.location.end or -1) != prev["coords"][1]:
             logging.debug("Previous result's start/end coordinate is not the same as the new one")
             can_reuse = False
         elif len(gene_annotations) != len(prev["gene_annotations"]):
             logging.debug("Gene annotations have changed")
             can_reuse = False
-        elif len(extra_genes) != len(prev["extra_genes"]):
+        elif len(to_add) != len(prev["extra_genes"]):
             logging.debug("Additional genes have changed")
+            can_reuse = False
+        elif len(to_delete) != len(prev["to_delete"]):
+            logging.debug("Genes to delete have changed")
             can_reuse = False
 
         # if we can't reuse, stop running antismash, because CDS annotations won't be correct
         if can_reuse:
-            product = ", ".join(data.cluster.biosynthetic_class)
+            product = ", ".join([bc.class_name.value for bc in entry.biosynthesis.classes])
             loci_region = FeatureLocation(
-                loci.start - 1 if loci.start else 0,
-                loci.end or len(record.seq)
+                locus.location.begin - 1 if locus.location.begin else 0,
+                locus.location.end or len(record.seq)
             )
             area = SubRegion(loci_region, tool="mibig", label=product)
-            return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file, doi_cache_file)
+            return MibigAnnotations(record.id, area, entry, cache_file, pubmed_cache_file, doi_cache_file)
         else:
             logging.error("Can't reuse MIBiG annotation.")
             raise AntismashInputError(
@@ -107,22 +114,22 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
     """This method will be called only when not reusing data"""
     with open(annotations_file) as handle:
         raw = json.load(handle)
-        data = Everything(raw)
+        entry = MibigEntry.from_json(raw)
 
-    product = ", ".join(data.cluster.biosynthetic_class)
-    loci = data.cluster.loci
+    product = ", ".join([bc.class_name.value for bc in entry.biosynthesis.classes])
+    locus = entry.loci[0]
     loci_region = FeatureLocation(
-        loci.start - 1 if loci.start else 0,
-        loci.end or len(record.seq)
+        locus.location.begin - 1 if locus.location.begin else 0,
+        locus.location.end or len(record.seq)
     )
     area = SubRegion(loci_region, tool="mibig", label=product)
 
     # re-annotate CDSes in the Record
-    if data.cluster.genes:
+    if entry.genes:
         # extra genes
-        for gene in data.cluster.genes.extra_genes:
+        for gene in entry.genes.to_add if entry.genes.to_add else []:
             if gene.id and gene.location:
-                exons = [FeatureLocation(exon.start - 1, exon.end, strand=gene.location.strand)
+                exons = [FeatureLocation(exon.begin - 1, exon.end, strand=gene.location.strand)
                          for exon in gene.location.exons]
                 location = CompoundLocation(exons) if len(exons) > 1 else exons[0]
                 if not location_contains_other(area.location, location):
@@ -137,7 +144,7 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
             locus_tag = cds_feature.locus_tag
             protein_id = cds_feature.protein_id
             name = cds_feature.gene
-            for annot in (data.cluster.genes.annotations if data.cluster.genes else []):
+            for annot in (entry.genes.annotations if entry.genes and entry.genes.annotations else []):
                 if locus_tag and annot.id == locus_tag:
                     pass
                 elif protein_id and annot.id == protein_id:
@@ -156,38 +163,19 @@ def mibig_loader(annotations_file: str, cache_file: str, pubmed_cache_file: str,
                 existing.add(name)
 
     referenced = set()
-    if data.cluster.genes and data.cluster.genes.annotations:
-        for gene in data.cluster.genes.annotations:
-            referenced.add(gene.id)
-    if data.cluster.nrp:
-        for nrps_gene in data.cluster.nrp.nrps_genes:
-            referenced.add(nrps_gene.gene_id)
-        for thio in data.cluster.nrp.thioesterases:
-            referenced.add(thio.gene)
-    if data.cluster.polyketide:
-        for synthase in data.cluster.polyketide.synthases:
-            referenced.update(set(synthase.genes))
-            for module in synthase.modules:
-                referenced.update(set(module.genes))
-    if data.cluster.saccharide:
-        for transferase in data.cluster.saccharide.glycosyltransferases:
-            referenced.add(transferase.gene_id)
-    for compound in data.cluster.compounds:
-        for moiety in compound.chem_moieties:
-            if moiety.subcluster:
-                referenced.update(set(moiety.subcluster))
-    if data.cluster.terpene:
-        referenced.update(data.cluster.terpene.prenyltransferases or [])
-        referenced.update(set(data.cluster.terpene.synth_cycl or []))
+    if entry.genes and entry.genes.annotations:
+        for gene in entry.genes.annotations:
+            referenced.add(str(gene.id))
+    referenced.update([str(r) for r in entry.biosynthesis.genes_referenced])
 
     missing = referenced.difference(existing)
     if missing:
         raise ValueError(
-            f"{data.cluster.mibig_accession} refers to missing genes: {', '.join(sorted(missing))}")
+            f"{entry.accession} refers to missing genes: {', '.join(sorted(missing))}")
 
     ambiguous = referenced.intersection(record.get_renames())
     if ambiguous:
         raise ValueError(
-            f"{data.cluster.mibig_accession} uses reference name(s) referring to multiple genes : {', '.join(sorted(ambiguous))}")
+            f"{entry.accession} uses reference name(s) referring to multiple genes : {', '.join(sorted(ambiguous))}")
 
-    return MibigAnnotations(record.id, area, data, cache_file, pubmed_cache_file, doi_cache_file)
+    return MibigAnnotations(record.id, area, entry, cache_file, pubmed_cache_file, doi_cache_file)

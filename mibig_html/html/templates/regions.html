@@ -5,28 +5,28 @@
   <div class="content">
     <div class="description-container">
       <div class="heading">
-        {{cluster.mibig_accession}}: {{cluster.compounds[0].compound}} biosynthetic gene cluster from <i>{{cluster.organism_name}}</i>
+        {{entry.accession}}: {{entry.compounds[0].name}} biosynthetic gene cluster from <i>{{entry.taxonomy.name}}</i>
         {{help_tooltip(svg_tooltip, "region_svg")}}
       </div>
       <div class="region-download">
         <a href="./generated/index.html#r1c1">View antiSMASH-generated output</a>
       </div>
       <div class="region-download">
-        <a href="{{cluster.mibig_accession}}.gbk">Download Cluster GenBank file</a>
+        <a href="{{entry.accession}}.gbk">Download Cluster GenBank file</a>
       </div>
       <div class="region-download">
         <div class="link-like download-svg" data-tag="{{region.anchor_id}}-svg" data-filename="{{record.id}}.svg">Download region SVG</div>
       </div>
       <div class = 'description-text'>
         {{region.description_text()}}.
-        {% if not cluster.loci.accession.startswith("MIBIG") %}
+        {% if not entry.loci[0].accession.startswith("MIBIG") %}
         <br />
-        {% if cluster.loci.start %}
-          {% set startend="?from={}&to={}".format(cluster.loci.start, cluster.loci.end) %}
+        {% if entry.loci[0].location.begin %}
+          {% set startend="?from={}&to={}".format(entry.loci[0].location.begin, entry.loci[0].location.end) %}
         {% else %}
           {% set startend="" %}
         {% endif %}
-        This entry is originally from NCBI GenBank <a href="https://www.ncbi.nlm.nih.gov/nuccore/{{cluster.loci.accession}}{{startend}}">{{cluster.loci.accession}}</a>
+        This entry is originally from NCBI GenBank <a href="https://www.ncbi.nlm.nih.gov/nuccore/{{entry.loci[0].accession}}{{startend}}">{{entry.loci[0].accession}}</a>
         {%- if record.get_alterations() -%}
             , but <span class="modification-warning">has been modified</span> (see Modifications tab for details)
         {%- endif %}.

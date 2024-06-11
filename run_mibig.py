@@ -16,7 +16,7 @@ from typing import List
 
 import antismash
 from antismash.common.subprocessing import execute
-from mibig.converters.v3.read.top import Everything
+from mibig.converters.shared.mibig import MibigEntry
 from mibig_taxa import TaxonCache  # pylint:disable=no-name-in-module
 
 import mibig_html
@@ -41,17 +41,17 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
 
     with open(json_path, "r") as json_file:
         raw = json.load(json_file)
-    data = Everything(raw)
-    mibig_acc = data.cluster.mibig_accession
-    gbk_acc = data.cluster.loci.accession
+    entry = MibigEntry.from_json(raw)
+    mibig_acc = entry.accession
+    gbk_acc = entry.loci[0].accession
     gbk_path = os.path.join(gbk_folder, "{}.gbk".format(gbk_acc))
     output_path = os.path.join(output_folder, mibig_acc)
     reusable_json_path = os.path.join(output_path, "{}.json".format(mibig_acc))
 
     # load/populate cache in advance, because it is needed to fetch taxonomy information
+    tax_id = entry.taxonomy.ncbi_tax_id
     cache = TaxonCache(cache_path)
     try:
-        tax_id = int(data.cluster.ncbi_tax_id)
         taxon = cache.get_antismash_taxon(tax_id)
     except ValueError as err:
         try:

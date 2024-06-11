@@ -5,21 +5,21 @@
   {% for compound in compounds %}
   <div class="compound-container">
     <div class="compound-name">
-      <strong id="{{compound.compound|replace(' ', '-')}}">{{compound.compound}}</strong>
-      {% if compound.chem_synonyms %}
-      [synonyms: {{', '.join(compound.chem_synonyms)}}]
+      <strong id="{{compound.name|replace(' ', '-')}}">{{compound.name}}</strong>
+      {% if compound.synonyms %}
+      [synonyms: {{', '.join(compound.synonyms)}}]
       {% endif %}
     </div>
     <div class="compound-structure">
       <div class="box">
-        {% if compound.chem_struct %}
-        <canvas id="compound-drawing-{{loop.index}}" width="100%" class="smiles-canvas" data-smiles="{{compound.chem_struct}}"></canvas>
+        {% if compound.structure %}
+        <canvas id="compound-drawing-{{loop.index}}" width="100%" class="smiles-canvas" data-smiles="{{compound.structure|string}}"></canvas>
         <div class="focus-clipboard">
-          <span class="clipboard-copy" data-seq="{{compound.chem_struct}}">Copy SMILES</span>
+          <span class="clipboard-copy" data-seq="{{compound.structure|string}}">Copy SMILES</span>
         </div>
         <div id="compound-drawing-{{loop.index}}-modal" class="modal-container">
           <div class="modal-content">
-            <canvas class="smiles-canvas-modal" data-smiles="{{compound.chem_struct}}"></canvas>
+            <canvas class="smiles-canvas-modal" data-smiles="{{compound.structure|string}}"></canvas>
           </div>
         </div>
         {% else %}
@@ -29,24 +29,26 @@
     </div>
     <div class="compound-formula">
       <div class="box">
-      {% for part in compound.molecular_formula.parts %}{{part.atom}}<sub>{{part.count}}</sub>{% endfor %}
+      {% if compound.formula %}
+      {% for part in compound.formula.parts %}{{part.atom}}<sub>{{part.count}}</sub>{% endfor %}
+      {% endif %}
       </div>
     </div>
     <div class="compound-references">
       <div class="box">
-      {% if compound.database_id %}
+      {% if compound.databases %}
       Chemical database entries<br>
-      {% for entry in compound.database_id %}
-      {% if entry.db == "npatlas" %}
-      <a href="https://www.npatlas.org/explore/compounds/{{entry.reference}}">NPAtlas</a><br>
-      {% elif entry.db == "pubchem" %}
-      <a href="https://pubchem.ncbi.nlm.nih.gov/compound/{{entry.reference}}">PubCHEM</a><br>
-      {% elif entry.db == "chebi" %}
-      <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI%3A{{entry.reference}}">ChEBI</a><br>
-      {% elif entry.db == "chembl" %}
-      <a href="https://www.ebi.ac.uk/chembl/compound_report_card/{{entry.reference}}">ChEMBL</a><br>
-      {% elif entry.db == "chemspider" %}
-      <a href="http://www.chemspider.com/Chemical-Structure.{{entry.reference}}.html">ChemSpider</a><br>
+      {% for ref_entry in compound.databases %}
+      {% if ref_entry.database == "npatlas" %}
+      <a href="https://www.npatlas.org/explore/compounds/{{ref_entry.identifier}}">NPAtlas</a><br>
+      {% elif ref_entry.database == "pubchem" %}
+      <a href="https://pubchem.ncbi.nlm.nih.gov/compound/{{ref_entry.identifier}}">PubCHEM</a><br>
+      {% elif ref_entry.database == "chebi" %}
+      <a href="https://www.ebi.ac.uk/chebi/searchId.do?chebiId=CHEBI%3A{{ref_entry.identifier}}">ChEBI</a><br>
+      {% elif ref_entry.database == "chembl" %}
+      <a href="https://www.ebi.ac.uk/chembl/compound_report_card/{{ref_entry.identifier}}">ChEMBL</a><br>
+      {% elif ref_entry.database == "chemspider" %}
+      <a href="http://www.chemspider.com/Chemical-Structure.{{ref_entry.identifier}}.html">ChemSpider</a><br>
       {% endif %}
       {% endfor %}
       {% endif %}
