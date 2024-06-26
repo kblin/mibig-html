@@ -6,30 +6,39 @@ import glob
 import json
 import os
 import sys
+from typing import Any
 
 from eutils import Client
+from mibig.converters.shared.common import Citation
 
 from mibig_html.annotations.references import PubmedCache, PubmedEntry
 
+
+def gather_references(data: Any, existing_results: list[str] = None) -> list[Citation]:
+    if existing_results is None:
+        existing_results = []
+    if isinstance(data, dict):
+        for key, val in data.items():
+            gather_references(val, existing_results)
+    elif isinstance(data, str):
+        if data.startswith("pubmed:"):
+            existing_results.append(Citation.from_json(data))
+    elif isinstance(data, list):
+        for val in data:
+            gather_references(val, existing_results)
+    return existing_results
+
+
 def extract_pmids(files: list[str]) -> list[str]:
-    """Extract all unique pmids from mibig jspn files"""
-    pmids: set[str] = set()
+    """Extract all unique pmids from mibig json files"""
     for filename in files:
         with open(filename) as handle:
             data = json.load(handle)
-        if "publications" not in data["cluster"]:
-            continue
-        for ref in data["cluster"]["publications"]:
-            if not ref.startswith("pubmed:"):
-                continue
-            pmid = ref.split(":", 1)[1]
-            if pmid == "0":
-                continue
-            pmids.add(pmid)
-    return sorted(list(pmids))
+        citations = gather_references(data)
+    return sorted(list({citation.value for citation in citations}))
 
 
-def fetch_all(cache_file: str, pmids: list[str]) -> None:
+def fetch_all(cache_file: str, citations: list[Citation]) -> None:
     pubmed_cache = PubmedCache(cache_file)
     client = Client(api_key=os.environ.get("NCBI_API_KEY", None))
 
