@@ -43,15 +43,11 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
                   record_layer: RecordLayer, _options_layer: OptionsLayer) -> HTMLSections:
     assert isinstance(results, MibigAnnotations)
     entry = results.entry
-    tax = results.taxonomy
-    # "class" is a reserved keyword in python, can't use it directly
-    tax_class = getattr(tax, "class")
 
     html = HTMLSections("mibig-general")
-    taxonomy_text = f"{tax.superkingdom} > {tax.kingdom} > {tax.phylum} > {tax_class} > {tax.order} > {tax.family} > {tax.name}"
     publications_links = ReferenceCollection(entry.references, results.pubmed_cache, results.doi_cache)
 
-    general = render_template("general.html", entry=results.entry, taxonomy_text=taxonomy_text,
+    general = render_template("general.html", entry=results.entry,
                               publications_links=publications_links.get_links())
     html.add_detail_section("General", general)
 
