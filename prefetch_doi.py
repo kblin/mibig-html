@@ -3,10 +3,12 @@
 # A copy of GNU AGPL v3 should have been included in this software package in LICENSE.txt.
 
 import glob
-import json
+from json import load
 import os
 import sys
-from typing import List
+from typing import Any, List
+
+from mibig.converters.shared.common import Citation
 
 from mibig_html.annotations.references import DoiCache, DoiEntry
 
@@ -20,23 +22,33 @@ SPECIAL = {
     },
 }
 
+def gather_dois(data: Any, existing_results: list[str] = None) -> list[Citation]:
+    if existing_results is None:
+        existing_results = []
+    if isinstance(data, dict):
+        for key, val in data.items():
+            gather_dois(val, existing_results)
+    elif isinstance(data, str):
+        if data.startswith("doi:"):
+            existing_results.append(Citation.from_json(data))
+    elif isinstance(data, list):
+        for val in data:
+            gather_dois(val, existing_results)
+    return existing_results
+            
 
 def fetch_all(cache_file: str, files: List[str]) -> None:
     doi_cache = DoiCache(cache_file)
     for filename in files:
         with open(filename) as handle:
-            data = json.load(handle)
-        if "publications" not in data["cluster"]:
-            continue
-        for ref in data["cluster"]["publications"]:
-            if not ref.startswith("doi:"):
-                continue
-            doi = ref.split(":", 1)[1]
-            if doi in SPECIAL:
-                doi_cache.add_entry(DoiEntry.from_json(SPECIAL[doi]))
+            data = load(handle)
+        citations = gather_dois(data)
+        for citation in citations:
+            if citation.value in SPECIAL:
+                doi_cache.add_entry(DoiEntry.from_json(SPECIAL[citation.value]))
             else:
                 try:
-                    doi_cache.get(doi)
+                    doi_cache.get(citation.value)
                     doi_cache.save()
                 except ValueError as err:
                     print("failed to import DOIs from", filename, err)
@@ -46,7 +58,7 @@ def fetch_all(cache_file: str, files: List[str]) -> None:
 
 if __name__ == "__main__":
     if not 2 <= len(sys.argv) <= 3:
-        print(f"Usage: {os.path.basename(sys.argv[0])} input_dir cache_file")
+        print(f"Usage: {os.path.basename(sys.argv[0])} input_dir [cache_file]")
         sys.exit(1)
     cache = "doi_cache.json"
     if len(sys.argv) == 3:
