@@ -17,7 +17,6 @@ from typing import List
 import antismash
 from antismash.common.subprocessing import execute
 from mibig.converters.shared.mibig import MibigEntry
-from mibig_taxa import TaxonCache  # pylint:disable=no-name-in-module
 
 import mibig_html
 from mibig_html import annotations
@@ -48,24 +47,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
     output_path = os.path.join(output_folder, mibig_acc)
     reusable_json_path = os.path.join(output_path, "{}.json".format(mibig_acc))
 
-    # load/populate cache in advance, because it is needed to fetch taxonomy information
-    tax_id = entry.taxonomy.ncbi_tax_id
-    cache = TaxonCache(cache_path)
-    try:
-        taxon = cache.get_antismash_taxon(tax_id)
-    except ValueError as err:
-        try:
-            entry = cache.get(tax_id, True)
-            write_log(
-                f"Outdated taxon {mibig_acc}: {tax_id} is now {entry.tax_id} ({err})", log_file_path)
-        except ValueError as err:
-            write_log(f"Unrecongnisable taxon {mibig_acc}: {err}", log_file_path)
-        return 1
-
-    # TODO: Properly support running on plants for MIBiG
-    orig_taxon = taxon
-    if taxon == "plants":
-        taxon = "fungi"
+    taxon = "bacteria"  # TODO: rework once mibig-taxa updated
 
     args = [
         "-v",
@@ -116,8 +98,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
             raise
             return 1
     write_log(f"Successfully {operation} MIBiG page for {mibig_acc}", log_file_path)
-
-    if mibig_only or orig_taxon == "plants":
+    if mibig_only:
         return 0
 
     print("Generating antiSMASH output for {}".format(mibig_acc))

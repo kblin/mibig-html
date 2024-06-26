@@ -17,7 +17,6 @@ from antismash.common.secmet.locations import (
 )
 
 from mibig.converters.shared.mibig import MibigEntry
-from mibig_taxa import TaxonCache  # pylint: disable=no-name-in-module
 
 from mibig_html.common.secmet import Record
 
@@ -33,8 +32,7 @@ class MibigAnnotations(DetectionResults):
         self.record_id = record_id
         self.area = area
 
-        cache = TaxonCache(cache_file)
-        self.taxonomy = cache.get(entry.taxonomy.ncbi_tax_id)
+        self.taxonomy = entry.taxonomy
 
         self.pubmed_cache = PubmedCache(pubmed_cache_file)
         self.doi_cache = DoiCache(doi_cache_file)
