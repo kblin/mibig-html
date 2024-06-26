@@ -16,7 +16,7 @@ class ReferenceEntry:
         # make title styling consistent
         if not title.endswith("."):
             title += "."
-        self.title = title
+        self.title = strip_html_formatting(title)   # some journals seem to embed HTML tags in titles
         self.authors = authors
         self.year = year
         self.journal = journal
@@ -63,6 +63,10 @@ class DoiEntry(ReferenceEntry):
     @property
     def info(self) -> str:
         return f"{super().info} DOI:{self.identifier}"
+
+
+def strip_html_formatting(string: str) -> str:
+    return re.sub(r"<[^<>]*>", "", string)
 
 
 class ReferenceCache:
