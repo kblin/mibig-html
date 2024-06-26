@@ -15,7 +15,7 @@ def read(fname):
 long_description = read('README.md')
 
 install_requires = [
-    'antismash @ git+https://github.com/antismash/antismash@6-1-1',
+    'antismash @ git+https://github.com/antismash/antismash@7-1-0-1',
     'eutils',
     'python-mibig',
     'mibig-taxa',
