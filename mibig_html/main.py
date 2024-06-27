@@ -41,7 +41,7 @@ from antismash.main import (
     SeqIO,
     svg,
 )
-from mibig.converters.shared.mibig.common import StatusLevel
+from mibig.converters.shared.common import StatusLevel
 from mibig.converters.shared.mibig import MibigEntry
 
 from mibig_html import annotations, html

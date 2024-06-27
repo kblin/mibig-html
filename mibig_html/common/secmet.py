@@ -13,6 +13,7 @@ from antismash.common.secmet.record import (
     SeqFeature,
     SeqRecord,
 )
+from mibig.converters.shared.mibig.genes import GeneId
 
 T = TypeVar("T", bound="Record")
 
@@ -107,10 +108,14 @@ class Record(ASRecord):
         self._deduplicated_cds_names[original_name].append(new_name)
         self.add_alteration(f"renamed CDS with name {original_name} at {cds_feature.location} to {new_name} to avoid duplicates")
 
-    def get_real_cds_name(self, name: str) -> str:
+    def get_cds_by_name(self, name: str | GeneId) -> str:
+        return super().get_cds_by_name(str(name))
+
+    def get_real_cds_name(self, name: str | GeneId) -> str:
         """ Gets the unique name for a CDS, if possible, from one of the names
             it was annotated with. If collisions would occur, an error is raised.
         """
+        name = str(name)
         results = self._alternative_names.get(name, set())
         if not results:
             try:
