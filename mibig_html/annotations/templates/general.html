@@ -55,7 +55,8 @@
                         <ul style="padding: 0; margin: 0; list-style: none;">
                             {% for class in entry.biosynthesis.classes %}
                                 <li>
-                                {{ class.class_name.value }} {{ class.extra_info.subclass | string }}
+                                {% set subclass = class.extra_info.subclass | string %}
+                                {{ class.class_name.value }}{% if subclass %} ({{ class.extra_info.subclass | string }}){% endif %}
                                 </li>
                             {% endfor %}
                         </ul>
