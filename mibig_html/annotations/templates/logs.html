@@ -1,58 +1,46 @@
 <div class="details">
     <div class="heading">
-    <span>Annotation changelog</span>
+     <span>Annotation changelog</span>
     </div>
-    <div>
-        {% for release in releases %}
-        <h4>
-            {{release.version}}
-            {% if release.date %}
-            ({{release.date.strftime('%Y-%m-%d')}})
-            {% endif %}
-        </h4>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Submitters</th>
-                    <th>Reviewers</th>
-                    <th>Notes</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for entry in release.entries %}
-                <tr>
-                    <td>
-                        <strong>{{entry.date.strftime('%Y-%m-%d')}}</strong>
-                    </td>
-                    <td class="contributors">
-                      <ul>
-                        {% for contributor in entry.contributors %}
-                        <li class="contributor" id="{{contributor | string}}">
-                          <svg class="icon"><use xlink:href="images/icons.svg#user-secret"></use></svg>
-                          (ID: <span class="contributor-id">{{contributor | string}}</span>)
-                        </li>
-                        {% endfor %}
-                      </ul>
-                    </td>
-                    <td class="reviewers">
-                      <ul>
-                        {% for reviewer in entry.reviewers %}
-                        <li class="reviewer" id="{{reviewer | string}}">
-                          <svg class="icon"><use xlink:href="images/icons.svg#user-secret"></use></svg>
-                          (ID: <span class="contributor-id">{{reviewer | string }}</span>)
-                        </li>
-                        {% endfor %}
-                      </ul>
-                    </td>
-                    <td class="changelog-notes">
-                      <svg class="icon"><use xlink:href="images/icons.svg#comment"></use></svg>
-                      {{entry.comment}}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-        {% endfor %}
+    <div class="history">
+        {%- for release in releases[::-1] -%}
+         <div class="release-line">
+           <h4>
+             Entry version: {{release.version}} {% if mibig_version is defined %}(MIBiG version: {{ mibig_version }}){% endif %}
+           </h4>
+         </div>
+         {% set striped = loop.index % 2 %}
+         <div{% if striped != 0 %} class="striped"{% endif %}></div>
+         <div class="entry-header{% if striped != 0 %} striped{% endif %}">Date</div>
+         <div class="entry-header{% if striped != 0 %} striped{% endif %}">Changes</div>
+         <div class="entry-header{% if striped != 0 %} striped{% endif %}">Submitters</div>
+         <div class="entry-header{% if striped != 0 %} striped{% endif %}">Reviewers</div>
+         <div class="border"></div>
+         {%- for entry in release.entries -%}
+          <div{% if striped != 0 %} class="striped"{% endif %}></div>
+          <div class="entry-date{% if striped != 0 %} striped{% endif %}">{{ entry.date.strftime('%Y-%m-%d') }}</div>
+          <div{% if striped != 0 %} class="striped"{% endif %}><svg class="icon"><use xlink:href="images/icons.svg#comment"></use></svg>{{ entry.comment }}</div>
+          <div class="contributors{% if striped != 0 %} striped{% endif %}">
+           <ul>
+           {%- for contributor in entry.contributors -%}
+            <li class="contributor" id="{{contributor | string}}">
+             <svg class="icon"><use xlink:href="images/icons.svg#user-secret"></use></svg>
+             (ID: <span class="contributor-id">{{ contributor | string }}</span>)
+            </li>
+           {%- endfor -%}
+           <ul>
+          </div>
+          <div class="contributors{% if striped != 0 %} striped{% endif %}">
+           <ul>
+            {%- for reviewer in entry.reviewers -%}
+            <li class="contributor" id="{{reviewer | string}}">
+             <svg class="icon"><use xlink:href="images/icons.svg#user-secret"></use></svg>
+             (ID: <span class="contributor-id">{{ reviewer | string }}</span>)
+            </li>
+            {%- endfor -%}
+           </ul>
+          </div>
+         {%- endfor -%}
+        {%- endfor -%}
     </div>
 </div>

@@ -132,6 +132,7 @@ a, .compound-link, .link-like {
     ul {
         list-style: none;
         padding: 0;
+        margin: 0;
     }
 }
 
@@ -184,4 +185,42 @@ a, .compound-link, .link-like {
 .icon {
     height: 1em;
     width: 1em;
+}
+
+.history {
+    display: grid;
+    grid-template-columns: 2em auto auto auto auto;
+    padding-bottom: 2em;
+
+    & .release-line {
+        padding-left: 1em;
+        grid-column-start: 1;
+        grid-column-end: 6;
+
+        & h4 {
+            margin-bottom: 0.5em;
+        }
+    }
+
+    & .border {
+        height: 2px;
+        background-color: #ddd;
+        grid-column-start: 1;
+        grid-column-end: 6;
+    }
+
+    & .striped {
+        background-color: rgb(248, 248, 248);
+    }
+
+    & .entry-header {
+        font-weight: bold;
+        vertical-align: middle;
+        min-height: 1em;
+    }
+
+    & .entry-date {
+        font-weight: bold;
+        padding-left: 1em;
+    }
 }
