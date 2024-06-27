@@ -144,17 +144,24 @@ class ReferenceLink:
     """Keep track of a single reference link."""
 
     __slots__ = (
-        'category',
-        'ref',
         'title',
+        'citation',
         'info',
     )
 
-    def __init__(self, category: str, reference: str, title: str, info: str = None) -> None:
-        self.category = category
-        self.ref = reference
+    def __init__(self, citation: Citation, *, title: str = "", info: str = "",
+                 ) -> None:
+        self.citation = citation
         self.title = title
         self.info = info
+
+    @property
+    def category(self) -> str:
+        return self.citation.database
+
+    @property
+    def ref(self) -> str:
+        return self.citation.to_url()
 
 
 class ReferenceCollection:
@@ -180,20 +187,11 @@ class ReferenceCollection:
             if publication.database == "pubmed":
                 if publication.value == "0":
                     continue
-                reference = "https://www.ncbi.nlm.nih.gov/pubmed/{}".format(publication.value)
                 pmids.append(publication.value)
-            elif publication.database == "patent":
-                reference = "https://patents.google.com/patent/{}".format(publication.value)
             elif publication.database == "doi":
                 dois.append(publication.value)
-                reference = "https://dx.doi.org/{}".format(publication.value)
-            elif publication.database == "url":
-                reference = publication.value
-            else:
-                raise ValueError("Unknown publication database: {}".format(publication.database))
 
-            self.references[publication.value] = ReferenceLink(
-                publication.database, reference, publication.value)
+            self.references[publication.value] = ReferenceLink(publication)
 
         self._resolve_pmids(pmids)
         self._resolve_dois(dois)
