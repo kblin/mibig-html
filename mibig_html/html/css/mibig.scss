@@ -224,3 +224,9 @@ a, .compound-link, .link-like {
         padding-left: 1em;
     }
 }
+
+.loci-grid {
+    display: grid;
+    grid-template-columns: fit-content(20%) fit-content(30%) fit-content(20%);
+    width: 50%;
+}

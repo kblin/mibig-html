@@ -63,21 +63,16 @@
                     </td>
                 </tr>
                 <tr>
-                    <td width="25%">
-                        <strong>Locus</strong>
-                    </td>
-                    <td>
-                        {% if entry.loci[0].accession.startswith("MIBIG:") %}
-                            Direct MIBiG submission: <a href="#">{{entry.accession}}.gbk</a>
-                        {% else %}
-                            {% if entry.loci[0].location.begin %}
-                                {% set startend="?from={}&to={}".format(entry.loci[0].location.begin, entry.loci[0].location.end) %}
-                            {% else %}
-                                {% set startend="" %}
-                            {% endif %}
-                            NCBI GenBank: <a href="https://www.ncbi.nlm.nih.gov/nuccore/{{entry.loci[0].accession}}{{startend}}">{{entry.loci[0].accession}}</a>
-                        {% endif %}
-                    </td>
+                  <td><strong>Loci</strong></td>
+                  <td>
+                    <div class="loci-grid">
+                      {% for locus in entry.loci %}
+                        <div style="padding-right: 2em">{{ locus.accession }}</div>
+                        <div style="padding-right: 2em">{{ locus.location.begin }} - {{ locus.location.end }}</div>
+                        <div> via {{ build_evidence_list(locus.evidence) }} </div>
+                      {% endfor %}
+                    </div>
+                  </td>
                 </tr>
                 <tr>
                     <td width="25%">
