@@ -13,6 +13,7 @@ from antismash.common.html_renderer import (
     switch,
 )
 from antismash.common.secmet import Record
+from mibig.converters.shared.common import Citation, Evidence
 
 _TOOLTIP_COUNTER = 0
 
@@ -79,6 +80,36 @@ def clickable_gene_list(names: List[str], record: Record,
     return Markup(separator.join(clickable_gene(name, record, force_current=force_current) for name in names))
 
 
+def build_evidence_list(evidence: list[Evidence], use_superscript: bool = False) -> Markup:
+    """ Builds markup for a list of evidence methods, including any supporting references.
+
+        Arguments:
+            evidence: the evidence to build markup from
+
+        Returns:
+            a Markup instance with the constructed HTML
+    """
+    sections = []
+    for section in evidence:
+        sections.append(f"{section.method}{build_short_form_citation_links(section.references, use_superscript=use_superscript)}")
+    return Markup(", ".join(sections))
+
+
+def build_short_form_citation_links(citations: list[Citation], use_superscript: bool = False) -> Markup:
+    """ Builds markup for a list of citations in short form as superscript.
+
+        Arguments:
+            citations: the citations to use in the list
+
+        Returns:
+            a Markup instance with the constructed HTML
+    """
+    assert all(citation.short_id for citation in citations)
+    citations = sorted(set(citations))
+    chunks = [f' <a href="{citation.to_url()}">[{citation.short_id}]</a>' for citation in citations]
+    return Markup(f'{"<sup>" if use_superscript else ""}{", ".join(chunks)}{"</sup>" if use_superscript else ""}')
+
+
 class FileTemplate(_FileTemplate):  # pylint: disable=too-few-public-methods
     """ A template renderer for file templates """
     def render(self, **kwargs: Any) -> Markup:
@@ -87,6 +118,8 @@ class FileTemplate(_FileTemplate):  # pylint: disable=too-few-public-methods
             raise ValueError("attempting to render without a template")
 
         defaults = {
+            "build_evidence_list": build_evidence_list,
+            "build_short_form_citation_links": build_short_form_citation_links,
             "collapser_start": collapser_start,
             "collapser_end": collapser_end,
             "help_tooltip": help_tooltip,
