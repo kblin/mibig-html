@@ -34,17 +34,21 @@
                             <td>{{gene["product"]}}</td>
                             <td>
                                 <ul style="padding:0; margin:0; list-style: none;">
-                                    {% for function in gene["functions"] %}
+                                    {%- for function in gene["functions"] -%}
                                     <li>{{function}}</li>
-                                    {% endfor %}
+                                    {%- endfor -%}
                                 </ul>
                             </td>
                             <td>
-                              {% if "evidences" in gene %}
-                              {% for evidence in gene["evidences"] %}
-                              {{evidence}}<br>
-                              {% endfor %}
-                              {% endif %}
+                                <ul style="padding:0; margin:0; list-style: none;">
+                                    <li>
+                                    {%- for methods in gene["functions"].values() -%}
+                                        {%- for method, links in methods.items() -%}
+                                            <span class="mibig-gf-evidence-{{ method[0] }}">{{ method }}</span> {{ links }}
+                                        {%- endfor -%}
+                                    {%- endfor -%}
+                                    </li>
+                                </ul>
                             </td>
                             {% if genes_have_comments -%}
                                 <td>

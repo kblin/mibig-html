@@ -14,7 +14,7 @@ from antismash.common.html_renderer import HTMLSections, Markup
 from antismash.common.layers import RegionLayer, RecordLayer
 from mibig.converters.shared.common import Citation
 
-from mibig_html.common.html_renderer import FileTemplate
+from mibig_html.common.html_renderer import FileTemplate, build_short_form_citation_links
 from mibig_html.common.layers import OptionsLayer
 
 from .mibig import MibigAnnotations, PubmedCache, DoiCache
@@ -70,7 +70,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
             "aa_seq": cds_feature.translation,
             "nt_seq": cds_feature.extract(record_layer.seq)
         }
-        gene["functions"] = []
+        gene["functions"] = {}
         for function in cds_feature.gene_functions:
             function_text = str(function.function)
             if function.tool != "mibig":
@@ -79,7 +79,7 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
                 function_text += " ({})".format(function.description)
             elif function.tool == "smcogs":
                 function_text += " ({})".format(function.description.split(" (")[0])
-            gene["functions"].append(function_text)
+            gene["functions"][function_text] = []
         annot_idx = -1
         for i, annot in enumerate(annots):
             annot_names = {str(annot.id)}
@@ -97,11 +97,16 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
                     function_text += " ({}) ".format(", ".join([f.function for f in annot.tailoring_functions]))
                 else:
                     function_text += " "
-                gene["functions"].append(function_text)
-                gene["evidences"] = sorted(set([e.method for e in function.evidence]))
+                references_by_method = {}
+                for evidence in function.evidence:
+                    references_by_method.setdefault(evidence.method, []).extend(function.references)
+                links = {}
+                for method, references in references_by_method.items():
+                    links[method] = build_short_form_citation_links(references)
+                gene["functions"][function_text] = links
             if annot.mutation_phenotype:
                 function_text = "Mutation phenotype: {}".format(annot.mutation_phenotype)
-                gene["functions"].append(function_text)
+                gene["functions"][function_text] = []
             if annot.product:
                 gene["product"] = annot.product
             if annot.comment:
