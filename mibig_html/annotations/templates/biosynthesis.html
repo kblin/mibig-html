@@ -1,0 +1,43 @@
+<div class="details">
+  <div class="heading">
+    <span>Biosynthesis information</span>
+  </div>
+  {% if biosynthesis.modules -%}
+  <div class="biosynthesis-section">
+   <h4 style="padding-left: 5em; font-size: 120%;">Biosynthetic modules</h4>
+   <div class="biosynthesis-modules">
+    {% for module in biosynthesis.modules -%}
+    <div class="module-grid">
+      <div class="name-header module-header">Name</div>
+      <div class="name-block"><div><div>{{ module.name }}</div></div></div>
+      <div class="type-header module-header">Type</div>
+      <div class="type-block">{{ module.module_type }}</div>
+      <div class="genes-header module-header">Genes</div>
+      <div class="genes-block">{{ clickable_gene_list(module.genes, record) }}</div>
+      <div class="substrates-header module-header">Substrates</div>
+      <div class="substrates-block">
+        {% for domain in module.extra_info.get_domains() %}
+          {% if domain in domains_with_substrates %}
+            {{ domain.substrates | join(", ") }} (evidence: {{build_evidence_list(domain.evidence)}})
+          {% endif %}
+        {% endfor %}
+      </div>
+      <div class="integrated-header module-header">Integrated Monomers</div>
+      <div class="integrated-block">
+        {%- for monomer in module.integrated_monomers -%}
+          {{ monomer.name }}{{ build_short_form_citation_links(monomer.references) }}{% if not loop.last %}, {% endif -%}
+        {%- endfor -%}
+      </div>
+      <div class="domains-header module-header">Domains</div>
+      <div class="domains-block">
+        {%- for domain in module.extra_info.get_domains() -%}
+         {{ domain.domain_type }}{% if domain.extra_info.subtype %} ({{ domain.extra_info.subtype }}){% endif -%}
+         {%- if not loop.last %}, {% endif -%}
+        {%- endfor -%}
+      </div>
+    </div>
+    {%- endfor %}
+   </div>
+  </div>
+  {% endif %}
+</div>

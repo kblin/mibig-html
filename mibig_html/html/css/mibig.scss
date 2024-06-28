@@ -227,6 +227,110 @@ a, .compound-link, .link-like {
 
 .loci-grid {
     display: grid;
-    grid-template-columns: fit-content(20%) fit-content(30%) fit-content(20%);
+    grid-template-columns: fit-content(20%) fit-content(30%) 1fr;
     width: 50%;
+}
+
+.biosynthesis-modules {
+    margin-bottom: 3em;
+    margin-left: 5%;
+    width: 80%;
+}
+
+.module-grid {
+    display: grid;
+    width: 100%;
+    grid-template-areas:
+    "name-header type-header    genes-header  substrates-header integrated-header"
+    "name-block  type-block     genes-block   substrates-block  integrated-block"
+    "name-block  domains-header domains-block domains-block     domains-block";
+    // add a faux-border
+    background-color: #aeaeae;
+    grid-gap: 1px;
+    padding: 2px;
+    margin-top: -1px;  // so that multiple grids underneath each other don't have extra border width
+    // ensure that multiple grids have the same widths for columns
+    grid-template-columns: 20em 20em 1fr 1fr 1fr;
+
+    & div {
+        background-color: white;
+        padding-left: 1em;
+    }
+    & .module-header {
+        text-align: center;
+        font-weight: bold;
+        margin-bottom: 1px;
+    }
+    & .name-header {
+        grid-area: name-header;
+        padding-left: 0;
+    }
+    & .name-block {
+        grid-area: name-block;
+        font-weight: bold;
+        padding-left: unset;
+        /* centering the name needs some workarounds, so fake a single-celled
+           table so that we can use 'vertical-align'
+        */
+        & div {
+            display: table;
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            & div {
+                display: table-cell;
+                height: 100%;
+                width: 100%;
+                text-align: center;
+                vertical-align: middle;
+                padding: 0;
+            }
+        }
+    }
+    & .type-header {
+        grid-area: type-header;
+    }
+    & .type-block {
+        grid-area: type-block;
+        text-align: center;
+        padding-bottom: 0.5em;
+        padding-top: 0.5em;
+    }
+    & .genes-header {
+        grid-area: genes-header;
+    }
+    & .genes-block {
+        grid-area: genes-block;
+        padding-bottom: 0.5em;
+        padding-top: 0.5em;
+    }
+    & .substrates-header {
+        grid-area: substrates-header;
+    }
+    & .substrates-block {
+        grid-area: substrates-block;
+        padding-bottom: 0.5em;
+        padding-top: 0.5em;
+    }
+    & .integrated-header {
+        grid-area: integrated-header;
+    }
+    & .integrated-block {
+        grid-area: integrated-block;
+        padding-bottom: 0.5em;
+        padding-top: 0.5em;
+    }
+    & .domains-header {
+        grid-area: domains-header;
+        margin-bottom: 0;
+        margin-top: 1px;
+        padding-bottom: 0.5em;
+        padding-top: 0.5em;
+    }
+    & .domains-block {
+        grid-area: domains-block;
+        margin-top: 1px;
+        padding-bottom: 0.5em;
+        padding-top: 0.5em;
+    }
 }

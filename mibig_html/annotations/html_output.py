@@ -119,6 +119,18 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
     html.add_detail_section("Genes", render_template("genes.html", genes=genes, genes_have_comments=genes_have_comments, record=record_layer),
                             class_name="mibig-genes")
 
+    if entry.biosynthesis:
+        domains_with_substrates = set()
+        for module in entry.biosynthesis.modules:
+            for domain in module.extra_info.get_domains():
+                if domain.substrates:
+                    domains_with_substrates.add(domain)
+        rendered = render_template(
+            "biosynthesis.html", biosynthesis=entry.biosynthesis,
+            domains_with_substrates=domains_with_substrates, record=record_layer,
+        )
+        html.add_detail_section("Biosynthesis", rendered, class_name="mibig-biosynthesis")
+
     #if entry.cluster.polyketide:
     #    html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.entry.cluster.polyketide, record=record_layer),
     #                            class_name="mibig-polyketide")
