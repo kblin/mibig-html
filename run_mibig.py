@@ -44,7 +44,7 @@ def _main(json_path: str, gbk_folder: str, cache_path: str, output_folder: str,
     mibig_acc = entry.accession
     gbk_acc = entry.loci[0].accession
     gbk_path = os.path.join(gbk_folder, "{}.gbk".format(gbk_acc))
-    output_path = os.path.join(output_folder, mibig_acc)
+    output_path = os.path.join(output_folder, f"{mibig_acc}.{entry.version}")
     reusable_json_path = os.path.join(output_path, "{}.json".format(mibig_acc))
 
     taxon = "bacteria"  # TODO: rework once mibig-taxa updated
