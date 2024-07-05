@@ -207,6 +207,18 @@ def generate_retired_page(entry: MibigEntry, options: ConfigType) -> None:
         result_file.write(aux)
 
 
+def generate_pending_page(entry: MibigEntry, options: ConfigType) -> None:
+    template = FileTemplate(path.get_full_path(__file__, "templates", "pending.html"))
+
+    options_layer = OptionsLayer(options, [])
+    mibig_id = entry.accession
+
+    aux = template.render(options=options_layer,
+                          page_title=mibig_id, mibig_id=mibig_id)
+    with open(os.path.join(options.output_dir, 'index.html'), 'w', encoding="utf_8") as result_file:
+        result_file.write(aux)
+
+
 def update_cds_description(record: Record, js_record: dict[str, Any],
                            cds_annotations: list[Annotation], results: annotations.MibigAnnotations) -> None:
     original_accession = results.entry.loci[0].accession

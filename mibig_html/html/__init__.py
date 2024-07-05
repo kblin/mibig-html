@@ -23,7 +23,7 @@ from antismash.outputs.html import get_arguments as html_get_arguments
 
 from mibig.converters.shared.mibig import MibigEntry
 
-from mibig_html.html.generator import generate_webpage, generate_retired_page
+from mibig_html.html.generator import generate_webpage, generate_retired_page, generate_pending_page
 
 
 NAME = "mibig_html"
@@ -103,6 +103,23 @@ def write_retired(entry: MibigEntry, options: ConfigType) -> None:
     copy_template_dir('js', output_dir)
     copy_template_dir('images', output_dir)
     generate_retired_page(entry, options)
+
+
+def write_pending(entry: MibigEntry, options: ConfigType) -> None:
+    """ Write the webpage for pending entries. Writes to options.output_dir
+
+        Arguments:
+            options: antisamsh config object
+
+        Returns:
+            None
+    """
+    output_dir = options.output_dir
+
+    copy_template_dir('css', output_dir, pattern="mibig.css")
+    copy_template_dir('js', output_dir)
+    copy_template_dir('images', output_dir)
+    generate_pending_page(entry, options)
 
 
 def copy_template_dir(template: str, output_dir: str, pattern: Optional[str] = None) -> None:
