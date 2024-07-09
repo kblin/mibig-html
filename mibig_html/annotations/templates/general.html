@@ -68,7 +68,7 @@
                     <div class="loci-grid">
                       {% for locus in entry.loci %}
                         <div style="padding-right: 2em">{{ locus.accession }}</div>
-                        <div style="padding-right: 2em">{{ locus.location.begin }} - {{ locus.location.end }}</div>
+                        <div style="padding-right: 2em">{% if locus.location.begin != 0 and locus.location.end != 0 %}{{ locus.location.begin }} - {{ locus.location.end }}{% endif %}</div>
                         <div> via {{ build_evidence_list(locus.evidence) }} </div>
                       {% endfor %}
                     </div>
