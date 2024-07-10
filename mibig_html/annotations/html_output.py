@@ -131,6 +131,12 @@ def generate_html(region_layer: RegionLayer, results: ModuleResults,
         )
         html.add_detail_section("Biosynthesis", rendered, class_name="mibig-biosynthesis")
 
+    if entry.biosynthesis.operons:
+        rendered = render_template(
+            "operons.html", operons=entry.biosynthesis.operons, record=record_layer,
+        )
+        html.add_detail_section("Operons", rendered, class_name="mibig-operons")
+
     #if entry.cluster.polyketide:
     #    html.add_detail_section("Polyketide", render_template("polyketide.html", pk=results.entry.cluster.polyketide, record=record_layer),
     #                            class_name="mibig-polyketide")

@@ -1,0 +1,16 @@
+<div class="details">
+  <div class="heading">
+    <span>Operons</span>
+  </div>
+  <div class="operons-body">
+    <table class="operon-items">
+     <tr>
+      <th>Genes</th>
+      <th>Evidence</th>
+     </tr>
+    {%- for operon in operons -%}
+     <tr><td>{{ clickable_gene_list(operon.genes, record, separator=", ") }}</td><td>{{ build_evidence_list(operon.evidence) }}</td></tr>
+    {% endfor %}
+    </table>
+  </div>
+</div>

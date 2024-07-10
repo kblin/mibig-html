@@ -392,3 +392,10 @@ a, .compound-link, .link-like {
         padding-top: 0.5em;
     }
 }
+
+.operons-body {
+    .operon-items {
+        border-collapse: separate;
+        border-spacing: 2rem 0;
+    }
+}
