@@ -38,7 +38,9 @@ def help_tooltip(text: str, name: str, inline: bool = False) -> Markup:
                    '</div>').format(unique_id, text, "-inline" if inline else ""))
 
 
-def clickable_gene(name: str, record: Record, force_current: bool = False, real_name: str = None) -> Markup:
+def clickable_gene(name: str, record: Record, force_current: bool = False, real_name: str = None,
+                   allow_missing: bool = False,
+                   ) -> Markup:
     """ A template for HTML that will highlight the relevant CDS in the overview,
         using the "gene" name if possible.
 
@@ -47,13 +49,19 @@ def clickable_gene(name: str, record: Record, force_current: bool = False, real_
             record: the containing Record
             force_current: if True, uses the given name instead of the gene name in display
             real_name: the unique name for the CDS if known, otherwise it will be looked up
+            allow_missing: allows missing gene names to default back to the text instead
+                           of raising an error
 
         Returns:
             A Markup instance with the constructed HTML
     """
 
     if not real_name:
-        real_name = record.get_real_cds_name(name)
+        try:
+            real_name = record.get_real_cds_name(name)
+        except ValueError as err:
+            assert "unknown CDS" in str(err)
+            return Markup(f"<span>{name}</span>")
     assert real_name is not None
     if force_current:
         gene_name = name
@@ -64,7 +72,8 @@ def clickable_gene(name: str, record: Record, force_current: bool = False, real_
 
 
 def clickable_gene_list(names: List[str], record: Record,
-                        force_current: bool = False, separator: str = " ") -> Markup:
+                        force_current: bool = False, separator: str = " ", allow_missing: bool = False,
+                        ) -> Markup:
     """ A template for HTML that will highlight relevant CDS features in the overview,
         using the "gene" name if possible.
 
@@ -73,6 +82,8 @@ def clickable_gene_list(names: List[str], record: Record,
             record: the containing Record
             force_current: if True, uses the given name instead of the gene name in display
             separator: the separator to use in the output
+            allow_missing: allows missing gene names to default back to the text instead
+                           of raising an error
 
         Returns:
             A Markup instance with the constructed HTML
