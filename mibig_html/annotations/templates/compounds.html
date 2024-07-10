@@ -5,10 +5,11 @@
   {% for compound in compounds %}
   <div class="compound-container">
     <div class="compound-name">
-      <strong id="{{compound.name|replace(' ', '-')}}">{{compound.name}}</strong>
+      <span><strong id="{{compound.name|replace(' ', '-')}}">{{compound.name}}</strong>
       {% if compound.synonyms %}
       [synonyms: {{', '.join(compound.synonyms)}}]
-      {% endif %}
+      {% endif %}</span>
+      <span style="margin-left: 5em;"><strong>Evidence:</strong> {{ build_evidence_list(compound.evidence) }}</span>
     </div>
     <div class="compound-structure">
       <div class="box">
