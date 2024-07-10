@@ -1,11 +1,41 @@
+{% import 'biosynthetic_step_macro.html' as step_formatter with context %}
 <div class="details">
   <div class="heading">
     <span>Biosynthesis information</span>
   </div>
-  {% if biosynthesis.modules -%}
+  {% if biosynthesis.modules or biosynthesis.paths -%}
   <div class="biosynthesis-section">
-   <h4 style="padding-left: 5em; font-size: 120%;">Biosynthetic modules</h4>
+   {% if biosynthesis.paths %}
+   <div class="biosynthesis-paths">
+    <h4 style="padding-left: 5em; font-size: 120%;">Biosynthetic paths</h4>
+   {%- for path in biosynthesis.paths -%}
+    {% set path_loop = loop %}
+    {%- for product in path.products -%}
+    <div class="biosynthesis-product">
+     <div class="biosynthesis-important">
+      <div class="biosynthesis-product-name">{{ product.name }}</div>
+      {%- if product.structure -%}
+      <div id="pathway-{{ path_loop.index }}-{{ loop.index }}" class="show-structure-button smiles-canvas" data-smiles="{{ product.structure|string }}">Show structure</div>
+      <div id="pathway-{{ path_loop.index }}-{{ loop.index }}-modal" class="modal-container" style="display: none;">
+       <div class="modal-content">
+        <canvas class="smiles-canvas-modal" data-smiles="{{ product.structure|string }}"></canvas>
+       </div>
+      </div>
+      {%- endif -%}
+     </div>
+     <div class="biosynthesis-steps biosynthesis-clear"><span class="biosynthesis-path-header">Pathway:</span> {{ step_formatter.pathway_steps(path.steps) }} {{ build_short_form_citation_links(path.references) }}</div>
+     {%- if product.comment %}<div class="biosynthesis-comment biosynthesis-clear"><span class="biosynthesis-path-header">Comment:</span> {{ product.comment }}</div>{% endif %}
+     {%- if path.is_subcluster %}<div class="biosynthesis-bool">Subcluster</div>{% endif -%}
+     {%- if path.produces_precursor %}<div class="biosynthesis-bool">Precursor</div>{% endif -%}
+    </div>
+    {%- endfor -%}
+   {%- endfor -%}
+   </div>
+   <div class="biosynthesis-clear"></div>
+   {% endif %}
+   {% if biosynthesis.modules %}
    <div class="biosynthesis-modules">
+    <h4 style="padding-left: 5em; font-size: 120%;">Biosynthetic modules</h4>
     {% for module in biosynthesis.modules -%}
     <div class="module-grid">
       <div class="name-header module-header">Name</div>
@@ -38,6 +68,7 @@
     </div>
     {%- endfor %}
    </div>
+  {% endif %}
   </div>
   {% endif %}
 </div>

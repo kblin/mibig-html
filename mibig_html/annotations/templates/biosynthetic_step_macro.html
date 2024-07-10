@@ -1,0 +1,7 @@
+{% macro pathway_steps(steps) -%}
+ {%- for step in steps -%}
+  {%- if not loop.first %} {% endif -%}
+  {%- if step | length > 1 %}({% endif %}{{ clickable_gene_list(step, record, separator=", ", allow_missing=True) }}{% if step | length > 1 %}){% endif -%}
+  {%- if not loop.last %} > {% endif -%}
+ {%- endfor -%}
+{%- endmacro %}
