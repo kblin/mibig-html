@@ -327,17 +327,6 @@ def _run_mibig(sequence_file: Optional[str], options: ConfigType) -> int:
         logging.info("MIBiG status: SUCCESS")
         return 0
 
-    if entry.status == StatusLevel.PENDING:
-
-        html.write_pending(entry, options)
-
-        running_time = datetime.now() - start_time
-        logging.debug("MIBiG HTML generation finished at %s; runtime: %s",
-                      datetime.now().strftime("%Y-%m-%d %H:%M:%S"), str(running_time))
-
-        logging.info("MIBiG status: SUCCESS")
-        return 0
-
     if sequence_file:
         records = parse_input_sequence(sequence_file, options.taxon, start, end)
         results = serialiser.AntismashResults(sequence_file.rsplit(os.sep, 1)[-1],
