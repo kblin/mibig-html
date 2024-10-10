@@ -22,6 +22,7 @@ def gather_references(data: Any, existing_results: list[str] = None) -> list[Cit
             gather_references(val, existing_results)
     elif isinstance(data, str):
         if data.startswith("pubmed:"):
+            data = data.split()[0]
             existing_results.append(Citation.from_json(data))
     elif isinstance(data, list):
         for val in data:
