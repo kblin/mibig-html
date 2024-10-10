@@ -5,6 +5,9 @@
   <title>{{page_title}}</title>
   <link rel="shortcut icon" type="image/x-icon" href="images/favicon.ico">
   <link rel="stylesheet" type="text/css" href="css/mibig.css">
+  {% if entry.status.value == 'pending' %}
+  <link rel="stylesheet" type="text/css" href="css/pending.css">
+  {% endif %}
 </head>
 {% set multi_record = False %}
 <body>

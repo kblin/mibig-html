@@ -145,6 +145,13 @@ nav {
             }
         }
     }
+    & .pending-warning {
+        font-size: 200%;
+        padding-top: 5px;
+        line-height: 200%;
+        color: orange;
+        font-weight: bold;
+    }
     & .custom-description {
         font-size: 90%;
         padding-top: 15px;

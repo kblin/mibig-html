@@ -79,7 +79,7 @@ def write(records: List[Record], results: List[Dict[str, ModuleResults]],
     """
     output_dir = options.output_dir
 
-    copy_template_dir('css', output_dir, pattern="mibig.css")
+    copy_template_dir('css', output_dir, pattern="*.css")
     copy_template_dir('js', output_dir)
     copy_template_dir('images', output_dir)
 
