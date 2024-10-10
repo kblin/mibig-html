@@ -155,16 +155,30 @@ class DoiCache(ReferenceCache):
             def simplify_author(author: Dict[str, Any]) -> str:
                 if "given" in author:
                     return f"{author['family']}, {author['given'][0]}"
-                else:
+                elif "family" in author:
                     return author["family"]
+                elif "literal" in author:
+                    return author["literal"]
+                else:
+                    return author["name"]
 
             raw = simple_request(doi, accepts["json"])
             if not raw:
                 return None
 
             values = json.loads(raw)
-            authors = [simplify_author(author) for author in values["author"]]
-            year = values["published"]["date-parts"][0]
+            try:
+                authors = [simplify_author(author) for author in values["author"]]
+            except KeyError as err:
+                print(values)
+                raise err
+            if "published" in values:
+                year = values["published"]["date-parts"][0]
+            elif "issued" in values:
+                year = values["issued"]["date-parts"][0]
+            else:
+                print(values)
+                raise ValueError("Could not extract date from referene")
             if isinstance(year, list):
                 year = year[0]
             assert isinstance(year, int)
@@ -185,7 +199,13 @@ class DoiCache(ReferenceCache):
                     if inst.get("name") == "bioRxiv":
                         journal = "preprint"
                         break
-            assert journal
+            if not journal:
+                if values.get("publisher") == "Zenodo":
+                    journal = "Zenodo"
+            if not journal:
+                if values.get("type") == "thesis":
+                    journal = values["publisher"]
+            assert journal, values
 
             # strip HTML with odd spacing from the title
             title = values["title"]
