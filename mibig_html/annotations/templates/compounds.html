@@ -50,6 +50,8 @@
       <a href="https://www.ebi.ac.uk/chembl/compound_report_card/{{ref_entry.identifier}}">ChEMBL</a><br>
       {% elif ref_entry.database == "chemspider" %}
       <a href="http://www.chemspider.com/Chemical-Structure.{{ref_entry.identifier}}.html">ChemSpider</a><br>
+      {% elif ref_entry.database == "cyanometdb" %}
+      CyanoMetDB {{ref_entry.identifier}}<br>
       {% endif %}
       {% endfor %}
       {% endif %}
